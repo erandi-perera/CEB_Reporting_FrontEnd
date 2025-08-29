@@ -1093,8 +1093,7 @@ const DebtorsAnalysis: React.FC = () => {
           </style>
         </head>
         <body>
-          <div class="header">DEBTORS SUMMARY - ${formData.option} (Cycle: ${formData.cycle})</div>
-          ${formData.areaCode ? `<div class="subheader">${getCodeLabel()}: ${formData.areaCode}</div>` : ''}
+          
           ${printRef.current.innerHTML}
           <div class="footer">Generated on: ${new Date().toLocaleDateString()} | CEB@2025</div>
         </body>

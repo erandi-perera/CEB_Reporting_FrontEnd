@@ -377,11 +377,11 @@ const DebtorsModal: React.FC<DebtorsModalProps> = ({
           )}
         </div>
 
-        <div className="p-5 border-t no-print flex flex-col items-center">
+        {/* <div className="p-5 border-t no-print flex flex-col items-center">
           <div className="text-xs text-gray-500">
             Generated on: {new Date().toLocaleDateString()} | CEB@2025
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LabelList } from "recharts";
 
 // Interfaces
 interface Area {
@@ -95,7 +95,7 @@ const AgeAnalysis: React.FC = () => {
     custType: "A",
     billCycle: "",
     areaCode: "",
-    timePeriod: "All"
+    timePeriod: "0-6"
   });
 
   // Helper functions
@@ -214,7 +214,7 @@ const AgeAnalysis: React.FC = () => {
     if (!debtors.length || !totals) return [];
 
     const data = [];
-    
+
     if (formData.timePeriod === "0-6") {
       data.push(
         { name: 'Month 0', value: totals.month0, color: '#1E3A8A' },
@@ -278,7 +278,7 @@ const AgeAnalysis: React.FC = () => {
     setReportError(null);
     setDebtors([]);
     setCurrentPage(1);
-    
+
     try {
       let ageRange = "";
       switch (formData.timePeriod) {
@@ -294,17 +294,17 @@ const AgeAnalysis: React.FC = () => {
       }
 
       const url = `/misapi/api/debtors?custType=${formData.custType}&billCycle=${formData.billCycle}&areaCode=${formData.areaCode}&ageRange=${ageRange}`;
-      
+
       // Increased timeout for Active customer reports
       const timeout = formData.custType === "A" ? 120000 : 60000; // 2 minutes for Active, 1 minute for others
       const data = await fetchWithErrorHandling(url, timeout);
-      
+
       if (data.errorMessage) {
         throw new Error(data.errorMessage);
       }
-      
+
       const resultData = data.data || [];
-      
+
       if (!Array.isArray(resultData)) {
         if (resultData.ErrorMessage) {
           throw new Error(resultData.ErrorMessage);
@@ -315,25 +315,25 @@ const AgeAnalysis: React.FC = () => {
         setDebtors(resultData);
         setTotalRecords(resultData.length);
       }
-      
+
       setShowReport(true);
-      
+
       // Scroll to report after a small delay to allow rendering
       setTimeout(() => {
         if (reportContainerRef.current) {
           reportContainerRef.current.scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
-      
+
     } catch (err: any) {
       let errorMessage = "Error fetching report: ";
-      
+
       if (err.message.includes('timed out')) {
         errorMessage += "The request timed out. This usually happens when there are too many Active customers. Try selecting a more specific time period or smaller area.";
       } else {
         errorMessage += (err.message || err.toString());
       }
-      
+
       setReportError(errorMessage);
     } finally {
       setReportLoading(false);
@@ -342,13 +342,13 @@ const AgeAnalysis: React.FC = () => {
 
   const downloadAsCSV = useCallback(() => {
     if (!debtors.length) return;
-    
+
     // Create headers based on the selected time period
     let headers = [
-      "Account Number", 
-      "Name", 
-      "Address", 
-      "Tariff Code", 
+      "Account Number",
+      "Name",
+      "Address",
+      "Tariff Code",
       "Outstanding Balance"
     ];
 
@@ -430,8 +430,8 @@ const AgeAnalysis: React.FC = () => {
         row.push(formatCurrency(debtor.Months61Plus));
       } else if (formData.timePeriod === "All") {
         row.push(
-          formatCurrency(debtor.Month0 + debtor.Month1 + debtor.Month2 + 
-                        debtor.Month3 + debtor.Month4 + debtor.Month5 + debtor.Month6),
+          formatCurrency(debtor.Month0 + debtor.Month1 + debtor.Month2 +
+            debtor.Month3 + debtor.Month4 + debtor.Month5 + debtor.Month6),
           formatCurrency(debtor.Months7_9 + debtor.Months10_12),
           formatCurrency(debtor.Months13_24),
           formatCurrency(debtor.Months25_36),
@@ -447,7 +447,7 @@ const AgeAnalysis: React.FC = () => {
     // Add totals row if more than one debtor
     if (debtors.length > 1 && totals) {
       const totalsRow = ["", "", "", "", "TOTAL:"];
-      
+
       if (formData.timePeriod === "0-6") {
         totalsRow.push(
           formatCurrency(totals.month0),
@@ -475,8 +475,8 @@ const AgeAnalysis: React.FC = () => {
         totalsRow.push(formatCurrency(totals.months61Plus));
       } else if (formData.timePeriod === "All") {
         totalsRow.push(
-          formatCurrency(totals.month0 + totals.month1 + totals.month2 + 
-                        totals.month3 + totals.month4 + totals.month5 + totals.month6),
+          formatCurrency(totals.month0 + totals.month1 + totals.month2 +
+            totals.month3 + totals.month4 + totals.month5 + totals.month6),
           formatCurrency(totals.months7_9 + totals.months10_12),
           formatCurrency(totals.months13_24),
           formatCurrency(totals.months25_36),
@@ -485,7 +485,7 @@ const AgeAnalysis: React.FC = () => {
           formatCurrency(totals.months61Plus)
         );
       }
-      
+
       rows.push(totalsRow);
     }
 
@@ -516,7 +516,7 @@ const AgeAnalysis: React.FC = () => {
     if (!debtors.length) return;
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
-    
+
     // Generate table HTML for all records
     const generateTableHTML = () => {
       let tableHTML = `
@@ -528,7 +528,7 @@ const AgeAnalysis: React.FC = () => {
               <th style="border: 1px solid #ddd; padding: 2px 4px; text-align: left; font-size: 10px; vertical-align: top; font-weight: bold;">Address</th>
               <th style="border: 1px solid #ddd; padding: 2px 4px; text-align: left; font-size: 10px; vertical-align: top; font-weight: bold;">Tariff</th>
               <th style="border: 1px solid #ddd; padding: 2px 4px; text-align: left; font-size: 10px; vertical-align: top; font-weight: bold;">Outstanding Balance</th>`;
-      
+
       // Add time period specific headers
       if (formData.timePeriod === "0-6") {
         tableHTML += `
@@ -563,9 +563,9 @@ const AgeAnalysis: React.FC = () => {
           <th style="border: 1px solid #ddd; padding: 2px 4px; text-align: left; font-size: 10px; vertical-align: top; font-weight: bold;">4-5 Years</th>
           <th style="border: 1px solid #ddd; padding: 2px 4px; text-align: left; font-size: 10px; vertical-align: top; font-weight: bold;">5+ Years</th>`;
       }
-      
+
       tableHTML += `</tr></thead><tbody>`;
-      
+
       // Add all debtor rows
       debtors.forEach((debtor, index) => {
         const bgColor = index % 2 === 0 ? "#ffffff" : "#f9f9f9";
@@ -576,7 +576,7 @@ const AgeAnalysis: React.FC = () => {
             <td style="border: 1px solid #ddd; padding: 2px 4px; font-size: 10px; vertical-align: top;">${getFullAddress(debtor)}</td>
             <td style="border: 1px solid #ddd; padding: 2px 4px; font-size: 10px; vertical-align: top;">${debtor.TariffCode}</td>
             <td style="border: 1px solid #ddd; padding: 2px 4px; text-align: right; font-size: 10px; vertical-align: top;">${formatCurrency(debtor.OutstandingBalance)}</td>`;
-        
+
         // Add time period specific data
         if (formData.timePeriod === "0-6") {
           tableHTML += `
@@ -611,14 +611,14 @@ const AgeAnalysis: React.FC = () => {
             <td style="border: 1px solid #ddd; padding: 2px 4px; text-align: right; font-size: 10px; vertical-align: top;">${formatCurrency(debtor.Months49_60)}</td>
             <td style="border: 1px solid #ddd; padding: 2px 4px; text-align: right; font-size: 10px; vertical-align: top;">${formatCurrency(debtor.Months61Plus)}</td>`;
         }
-        
+
         tableHTML += `</tr>`;
       });
-      
+
       tableHTML += `</tbody></table>`;
       return tableHTML;
     };
-    
+
     printWindow.document.write(`
       <html>
         <head>
@@ -675,7 +675,7 @@ const AgeAnalysis: React.FC = () => {
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => {
@@ -716,8 +716,8 @@ const AgeAnalysis: React.FC = () => {
   const renderChart = () => {
     const hideChartPeriods = ["1-2", "2-3", "3-4", "4-5", ">5"];
     if (!showChart || !chartData.length || hideChartPeriods.includes(formData.timePeriod)) {
-    return null;
-  }
+      return null;
+    }
 
     return (
       <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded">
@@ -726,40 +726,43 @@ const AgeAnalysis: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setChartType('bar')}
-              className={`px-3 py-1 rounded text-sm ${
-                chartType === 'bar' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 hover:bg-gray-300'
-              }`}
+              className={`px-3 py-1 rounded text-sm ${chartType === 'bar'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 hover:bg-gray-300'
+                }`}
             >
               Bar Chart
             </button>
             <button
               onClick={() => setChartType('pie')}
-              className={`px-3 py-1 rounded text-sm ${
-                chartType === 'pie' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 hover:bg-gray-300'
-              }`}
+              className={`px-3 py-1 rounded text-sm ${chartType === 'pie'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 hover:bg-gray-300'
+                }`}
             >
               Pie Chart
             </button>
           </div>
         </div>
-        
+
         <div style={{ width: '100%', height: '400px' }}>
+
           {chartType === 'bar' ? (
+
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <BarChart
+                data={chartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   tick={{ fontSize: 11 }}
                   angle={-45}
                   textAnchor="end"
                   height={80}
                 />
-                <YAxis 
+                <YAxis
                   tick={{ fontSize: 11 }}
                   tickFormatter={(value) => {
                     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -767,19 +770,44 @@ const AgeAnalysis: React.FC = () => {
                     return value.toString();
                   }}
                 />
-                <Tooltip 
+                <Tooltip
+                  cursor={{ fill: 'rgba(0,0,0,0.05)' }} // highlight bar on hover
                   formatter={(value) => [formatCurrency(Number(value)), 'Amount']}
                   labelStyle={{ fontSize: '12px' }}
                 />
-                <Legend />
-                <Bar 
-                  dataKey="value" 
-                  fill="#1E3A8A" 
-                  name="Outstanding Amount"
-                  radius={[4, 4, 0, 0]}
+                <Legend
+                  payload={chartData.map((item) => ({
+                    id: item.name,
+                    type: "square",
+                    value: item.name,
+                    color: item.color
+                  }))}
                 />
+
+                <Bar
+                  dataKey="value"
+                  name="Outstanding Amount"
+                  // fill="#1E3A8A"
+                  radius={[6, 6, 0, 0]} // rounded corners
+                  onClick={(data) => {
+                    alert(`You clicked on ${data.name} with value ${formatCurrency(data.value)}`);
+                  }}
+                  isAnimationActive={true} // animate on load
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`bar-cell-${index}`} fill={entry.color} />
+                  ))}
+                  {/* Labels on bars */}
+                  <LabelList
+                    dataKey="value"
+                    position="top"
+                    formatter={(val: number) => formatCurrency(val)}
+                    style={{ fontSize: '10px', fill: '#333' }}
+                  />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
+
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -799,7 +827,7 @@ const AgeAnalysis: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => [formatCurrency(Number(value)), 'Amount']}
                   labelStyle={{ fontSize: '12px' }}
                 />
@@ -808,6 +836,7 @@ const AgeAnalysis: React.FC = () => {
             </ResponsiveContainer>
           )}
         </div>
+
       </div>
     );
   };
@@ -844,21 +873,20 @@ const AgeAnalysis: React.FC = () => {
         >
           Previous
         </button>
-        
+
         {pageNumbers.map(pageNum => (
           <button
             key={pageNum}
             onClick={() => setCurrentPage(pageNum)}
-            className={`px-2 py-1 text-xs rounded ${
-              currentPage === pageNum 
-                ? 'bg-[#7A0000] text-white' 
-                : 'bg-gray-200 hover:bg-gray-300'
-            }`}
+            className={`px-2 py-1 text-xs rounded ${currentPage === pageNum
+              ? 'bg-[#7A0000] text-white'
+              : 'bg-gray-200 hover:bg-gray-300'
+              }`}
           >
             {pageNum}
           </button>
         ))}
-        
+
         <button
           onClick={() => setCurrentPage(currentPage + 1)}
           disabled={currentPage === totalPages}
@@ -873,7 +901,7 @@ const AgeAnalysis: React.FC = () => {
         >
           Last
         </button>
-        
+
         <span className="text-xs text-gray-600 ml-4">
           Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalRecords)} of {totalRecords} records
         </span>
@@ -884,15 +912,15 @@ const AgeAnalysis: React.FC = () => {
   const renderForm = () => (
     <>
       <h2 className={`text-xl font-bold mb-6 ${maroon}`}>Age Analysis</h2>
-      
+
       {/* Warning for Active customers */}
       {formData.custType === "A" && (
         <div className="mb-4 p-3 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded text-sm">
-          <strong>Note:</strong> Active customer reports may take longer to load due to large dataset size. 
+          <strong>Note:</strong> Active customer reports may take longer to load due to large dataset size.
           Consider selecting a specific time period for faster results.
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Customer Type Dropdown */}
@@ -966,7 +994,7 @@ const AgeAnalysis: React.FC = () => {
             </select>
           </div>
         </div>
-        
+
         {/* View Report Button */}
         <div className="w-full mt-6 flex justify-end">
           <button
@@ -997,8 +1025,8 @@ const AgeAnalysis: React.FC = () => {
     if (!debtors.length && !reportLoading && !reportError) return null;
 
     const disableChartPeriods = ["1-2", "2-3", "3-4", "4-5", ">5"];
-  const isChartDisabled = disableChartPeriods.includes(formData.timePeriod);
-    
+    const isChartDisabled = disableChartPeriods.includes(formData.timePeriod);
+
     return (
       <div className="mt-8" ref={printRef}>
         <div className="flex justify-between items-center mb-2">
@@ -1006,21 +1034,21 @@ const AgeAnalysis: React.FC = () => {
             Debtors Age Analysis — {customerTypeOptions.find(t => t.value === formData.custType)?.display} Customers
           </h3>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={downloadAsCSV}
               className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm"
               disabled={!debtors.length}
             >
               Export CSV
             </button>
-            <button 
+            <button
               onClick={printPDF}
               className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm"
               disabled={!debtors.length}
             >
               Print PDF
             </button>
-            <button 
+            <button
               onClick={() => setShowChart(!showChart)}
               className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm text-white"
               disabled={!debtors.length || isChartDisabled}
@@ -1028,7 +1056,7 @@ const AgeAnalysis: React.FC = () => {
             >
               {showChart ? 'Hide Chart' : 'Show Chart'}
             </button>
-            <button 
+            <button
               onClick={handleBack}
               className="px-3 py-1 bg-[#7A0000] hover:bg-[#A52A2A] rounded text-sm text-white"
             >
@@ -1036,7 +1064,7 @@ const AgeAnalysis: React.FC = () => {
             </button>
           </div>
         </div>
-        
+
         <p className="text-sm text-gray-600 mb-2">
           Bill Cycle: {billCycleOptions.find(b => b.code === formData.billCycle)?.display} - {formData.billCycle}
         </p>
@@ -1063,7 +1091,7 @@ const AgeAnalysis: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         {reportError && (
           <div className="mt-6 text-red-600 bg-red-100 border border-red-300 p-4 rounded text-sm">
             <strong>Error:</strong> {reportError}
@@ -1097,7 +1125,7 @@ const AgeAnalysis: React.FC = () => {
             {renderChart()}
 
             {renderPagination()}
-            
+
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-xs">
                 <thead>
@@ -1233,7 +1261,7 @@ const AgeAnalysis: React.FC = () => {
     return (
       <div className="text-red-600 bg-red-100 border border-red-300 p-4 rounded text-sm">
         <strong>Error:</strong> {error}
-        <button 
+        <button
           onClick={() => setError(null)}
           className="float-right text-red-800 font-bold"
         >
@@ -1259,7 +1287,7 @@ const AgeAnalysis: React.FC = () => {
 
       {/* Report container with scrollable content */}
       {showReport && (
-        <div 
+        <div
           ref={reportContainerRef}
           className="mt-4 border border-gray-300 rounded-lg overflow-hidden"
           style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
